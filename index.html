@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>all⚡ Life System</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+
+body{
+background:#050505;
+color:#00ffff;
+font-family:Arial;
+text-align:center;
+padding:30px;
+}
+
+/* neon grid background */
+body::before{
+content:"";
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:
+linear-gradient(#00ffff22 1px, transparent 1px),
+linear-gradient(90deg,#00ffff22 1px, transparent 1px);
+background-size:40px 40px;
+z-index:-1;
+}
+
+/* logo */
+h1{
+font-size:45px;
+color:#00ffff;
+text-shadow:
+0 0 5px #00ffff,
+0 0 10px #00ffff,
+0 0 20px #00ffff,
+0 0 40px #00ffff;
+}
+
+/* menu text */
+h3{
+text-shadow:0 0 10px #00ffff;
+}
+
+/* neon buttons */
+button{
+padding:10px 22px;
+margin:10px;
+background:#050505;
+border:1px solid #00ffff;
+color:#00ffff;
+cursor:pointer;
+
+box-shadow:
+0 0 5px #00ffff,
+0 0 10px #00ffff inset;
+}
+
+button:hover{
+transform:scale(1.08);
+box-shadow:
+0 0 10px #00ffff,
+0 0 30px #00ffff;
+}
+
+/* inputs */
+input{
+padding:6px;
+background:#050505;
+border:1px solid #00ffff;
+color:#00ffff;
+
+box-shadow:
+0 0 5px #00ffff inset;
+}
+
+/* lists */
+ul{
+list-style:none;
+padding:0;
+}
+
+li{
+margin:5px;
+text-shadow:0 0 5px #00ffff;
+}
+
+/* graph glow */
+canvas{
+margin-top:30px;
+border:1px solid #00ffff;
+box-shadow:
+0 0 10px #00ffff,
+0 0 30px #00ffff;
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>all⚡</h1>
+
+<h3>MENU</h3>
+
+<button onclick="openChecker()">Life Checker</button>
+<button onclick="showHistory()">History Harian</button>
+<button onclick="showGraph()">Grafik Health</button>
+
+<div id="checker" style="display:none">
+
+<h2>Life Checker</h2>
+
+<p>Tidur (jam)</p>
+<input id="sleep" type="number">
+
+<p>Air minum (gelas)</p>
+<input id="water" type="number">
+
+<p>Olahraga (menit)</p>
+<input id="sport" type="number">
+
+<p>Rokok (batang)</p>
+<input id="smoke" type="number">
+
+<br><br>
+
+<button onclick="hitung()">Hitung Hari Ini</button>
+
+<h3 id="score"></h3>
+<p id="status"></p>
+
+<h3 id="life"></h3>
+<p id="level"></p>
+
+<h3>AI Health Advice</h3>
+<ul id="advice"></ul>
+
+</div>
+
+<div>
+
+<h3 id="historyTitle"></h3>
+<ul id="historyList"></ul>
+
+</div>
+
+<canvas id="chart" width="400" height="200"></canvas>
+
+<script>
+
+function openChecker(){
+document.getElementById("checker").style.display="block"
+}
+
+function hitung(){
+
+let sleep=Number(document.getElementById("sleep").value)
+let water=Number(document.getElementById("water").value)
+let sport=Number(document.getElementById("sport").value)
+let smoke=Number(document.getElementById("smoke").value)
+
+let score=50
+
+if(sleep>=7) score+=10
+if(water>=6) score+=10
+if(sport>=20) score+=10
+if(smoke>0) score-=10
+
+document.getElementById("score").innerText="Health Score Hari Ini: "+score
+
+let status=""
+
+if(score>=70) status="Kondisi bagus"
+else if(score>=50) status="Lumayan"
+else status="Perlu perbaikan"
+
+document.getElementById("status").innerText=status
+
+generateAdvice(sleep,water,sport,smoke)
+
+lifeEstimate(score)
+
+saveHistory(score)
+
+}
+
+function generateAdvice(sleep,water,sport,smoke){
+
+let advice=[]
+let ul=document.getElementById("advice")
+ul.innerHTML=""
+
+if(sleep<7) advice.push("Tidur minimal 7 jam.")
+if(water<6) advice.push("Minum air lebih banyak.")
+if(sport<20) advice.push("Olahraga minimal 20 menit.")
+if(smoke>0) advice.push("Kurangi rokok.")
+
+if(advice.length==0){
+advice.push("Kebiasaan hari ini sehat.")
+}
+
+advice.forEach(a=>{
+let li=document.createElement("li")
+li.textContent=a
+ul.appendChild(li)
+})
+
+}
+
+function lifeEstimate(score){
+
+let life=70
+
+if(score>=70) life+=10
+if(score>=80) life+=5
+if(score<50) life-=10
+
+document.getElementById("life").innerText="Estimasi Umur: "+life+" tahun"
+
+let level=""
+
+if(score>=80) level="Level: Elite Human"
+else if(score>=60) level="Level: Healthy"
+else level="Level: Survival Mode"
+
+document.getElementById("level").innerText=level
+
+}
+
+function saveHistory(score){
+
+let date=new Date().toLocaleDateString()
+
+let data=JSON.parse(localStorage.getItem("lifeHistory"))||[]
+
+data.push({
+date:date,
+score:score
+})
+
+localStorage.setItem("lifeHistory",JSON.stringify(data))
+
+}
+
+function showHistory(){
+
+let data=JSON.parse(localStorage.getItem("lifeHistory"))||[]
+
+let list=document.getElementById("historyList")
+list.innerHTML=""
+
+document.getElementById("historyTitle").innerText="History Harian"
+
+data.forEach(d=>{
+let li=document.createElement("li")
+li.textContent=d.date+" - Score: "+d.score
+list.appendChild(li)
+})
+
+}
+
+function showGraph(){
+
+let data=JSON.parse(localStorage.getItem("lifeHistory"))||[]
+
+let labels=data.map(d=>d.date)
+let scores=data.map(d=>d.score)
+
+new Chart(document.getElementById("chart"),{
+type:"line",
+data:{
+labels:labels,
+datasets:[{
+label:"Health Score",
+data:scores,
+borderColor:"#00ffff",
+backgroundColor:"#00ffff33"
+}]
+}
+})
+
+}
+
+</script>
+
+</body>
+</html>
